@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitelist Manager</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-raw {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .raw-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .config-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .config-section input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Whitelist Manager</h1>
+            <p>Kelola daftar username yang diizinkan dengan mudah</p>
+        </div>
+
+        <div class="content">
+            <!-- Konfigurasi Supabase -->
+            <div class="config-section">
+                <h3>⚙️ Konfigurasi Supabase</h3>
+                <div class="form-group">
+                    <label for="supabaseUrl">Supabase URL:</label>
+                    <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
+                </div>
+                <div class="form-group">
+                    <label for="supabaseKey">Supabase Anon Key:</label>
+                    <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                </div>
+                <button class="btn btn-add" onclick="initSupabase()">Koneksi ke Supabase</button>
+            </div>
+
+            <!-- Form Whitelist -->
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Masukkan username">
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-add" onclick="addToWhitelist()">➕ Add Whitelist</button>
+                <button class="btn btn-delete" onclick="deleteFromWhitelist()">🗑️ Delete Whitelist</button>
+                <button class="btn btn-check" onclick="checkWhitelist()">🔍 Check Whitelist</button>
+                <button class="btn btn-raw" onclick="getRawLink()">📋 Get Raw Link</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Memproses...</p>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+
+        // Inisialisasi Supabase
+        function initSupabase() {
+            const url = document.getElementById('supabaseUrl').value;
+            const key = document.getElementById('supabaseKey').value;
+
+            if (!url || !key) {
+                showResult('Mohon isi URL dan Key Supabase terlebih dahulu!', 'error');
+                return;
+            }
+
+            try {
+                supabase = window.supabase.createClient(url, key);
+                showResult('✅ Berhasil terhubung ke Supabase!', 'success');
+            } catch (error) {
+                showResult('❌ Gagal terhubung ke Supabase: ' + error.message, 'error');
+            }
+        }
+
+        // Tampilkan loading
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Tampilkan hasil
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        // Tambah ke whitelist
+        async function addToWhitelist() {
+            if (!supabase) {
+                showResult('❌ Silakan koneksi ke Supabase terlebih dahulu!', 'error');
+                return;
+            }
+
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showResult('❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                // Cek apakah username sudah ada
+                const { data: existing, error: checkError } = await supabase
+                    .from('whitelist')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                if (existing) {
+                    showLoading(false);
+                    showResult(`❌ Username "${username}" sudah ada di whitelist!`, 'error');
+                    return;
+                }
+
+                // Tambah username baru
+                const { data, error } = await supabase
+                    .from('whitelist')
+                    .insert([{ username: username }])
+                    .select();
+
+                showLoading(false);
+
+                if (error) {
+                    showResult('❌ Gagal menambah ke whitelist: ' + error.message, 'error');
+                } else {
+                    showResult(`✅ Username "${username}" berhasil ditambahkan ke whitelist!`, 'success');
+                    document.getElementById('username').value = '';
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Hapus dari whitelist
+        async function deleteFromWhitelist() {
+            if (!supabase) {
+                showResult('❌ Silakan koneksi ke Supabase terlebih dahulu!', 'error');
+                return;
+            }
+
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showResult('❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('whitelist')
+                    .delete()
+                    .eq('username', username)
+                    .select();
+
+                showLoading(false);
+
+                if (error) {
+                    showResult('❌ Gagal menghapus dari whitelist: ' + error.message, 'error');
+                } else if (data && data.length > 0) {
+                    showResult(`✅ Username "${username}" berhasil dihapus dari whitelist!`, 'success');
+                    document.getElementById('username').value = '';
+                } else {
+                    showResult(`❌ Username "${username}" tidak ditemukan di whitelist!`, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Cek whitelist
+        async function checkWhitelist() {
+            if (!supabase) {
+                showResult('❌ Silakan koneksi ke Supabase terlebih dahulu!', 'error');
+                return;
+            }
+
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showResult('❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('whitelist')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                showLoading(false);
+
+                if (error && error.code !== 'PGRST116') {
+                    showResult('❌ Gagal mengecek whitelist: ' + error.message, 'error');
+                } else if (data) {
+                    showResult(`✅ Username "${username}" ADA di whitelist!`, 'success');
+                } else {
+                    showResult(`❌ Username "${username}" TIDAK ADA di whitelist!`, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Ambil raw link
+        async function getRawLink() {
+            if (!supabase) {
+                showResult('❌ Silakan koneksi ke Supabase terlebih dahulu!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('whitelist')
+                    .select('username')
+                    .order('username');
+
+                showLoading(false);
+
+                if (error) {
+                    showResult('❌ Gagal mengambil data whitelist: ' + error.message, 'error');
+                } else {
+                    const usernames = data.map(item => item.username).join('\n');
+                    const resultDiv = document.getElementById('result');
+                    
+                    if (usernames) {
+                        resultDiv.innerHTML = `
+                            <div class="result success">✅ Raw Link Whitelist:</div>
+                            <div class="raw-output">${usernames}</div>
+                            <button class="btn btn-add" onclick="copyToClipboard()" style="margin-top: 10px;">📋 Copy to Clipboard</button>
+                        `;
+                    } else {
+                        showResult('❌ Whitelist kosong!', 'error');
+                    }
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Copy ke clipboard
+        function copyToClipboard() {
+            const rawOutput = document.querySelector('.raw-output');
+            const text = rawOutput.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showResult('✅ Berhasil disalin ke clipboard!', 'success');
+            }).catch(() => {
+                showResult('❌ Gagal menyalin ke clipboard!', 'error');
+            });
+        }
+
+        // Enter key support
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addToWhitelist();
+            }
+        });
+    </script>
+</body>
+</html>

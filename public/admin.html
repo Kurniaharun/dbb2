@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Whitelist Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-upgrade {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f44336, #da190b);
+            color: white;
+        }
+
+        .btn-refresh {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-raw {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .btn-bulk {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .keys-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .keys-table th,
+        .keys-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .keys-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .keys-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .key-display {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-copy {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-delete-small {
+            background: #dc3545;
+            color: white;
+        }
+
+        .raw-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👑 Admin Panel</h1>
+            <p>Kelola keys dan upgrade limits</p>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <div class="content">
+            <!-- Create Reseller Key Section -->
+            <div class="section">
+                <h2>🔑 Buat Reseller Key</h2>
+                <div class="form-group">
+                    <label for="resellerUsername">Username Reseller:</label>
+                    <input type="text" id="resellerUsername" placeholder="Masukkan username reseller">
+                </div>
+                <div class="form-group">
+                    <label for="resellerLimit">Limit Awal:</label>
+                    <input type="number" id="resellerLimit" value="25" min="1" max="1000">
+                </div>
+                <button class="btn btn-create" onclick="createResellerKey()">🔑 Buat Reseller Key</button>
+                <div id="createResellerResult"></div>
+            </div>
+
+            <!-- Create Upgrade Key Section -->
+            <div class="section">
+                <h2>⬆️ Buat Upgrade Key</h2>
+                <div class="form-group">
+                    <label for="upgradeResellerKey">Reseller Key:</label>
+                    <input type="text" id="upgradeResellerKey" placeholder="Masukkan reseller key yang akan diupgrade">
+                </div>
+                <button class="btn btn-upgrade" onclick="createUpgradeKey()">⬆️ Buat Upgrade Key</button>
+                <div id="createUpgradeResult"></div>
+            </div>
+
+            <!-- Whitelist Management Section -->
+            <div class="section">
+                <h2>📋 Kelola Whitelist</h2>
+                
+                <!-- Single User Management -->
+                <div id="singleUserSection">
+                    <div class="form-group">
+                        <label for="whitelistUsername">Username:</label>
+                        <input type="text" id="whitelistUsername" placeholder="Masukkan username">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-create" onclick="addToWhitelist()">➕ Add Whitelist</button>
+                        <button class="btn btn-delete" onclick="deleteFromWhitelist()">🗑️ Delete Whitelist</button>
+                        <button class="btn btn-check" onclick="checkWhitelist()">🔍 Check Whitelist</button>
+                        <button class="btn btn-raw" onclick="getRawLink()">📋 Get Raw Link</button>
+                        <button class="btn btn-bulk" onclick="toggleBulkMode()">📝 Bulk Add Mode</button>
+                    </div>
+                </div>
+
+                <!-- Bulk User Management -->
+                <div id="bulkUserSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="bulkUsernames">Usernames (satu per baris):</label>
+                        <textarea id="bulkUsernames" rows="10" placeholder="Masukkan usernames, satu per baris. Contoh:&#10;user1&#10;user2&#10;user3&#10;&#10;Note: @ symbol akan otomatis dihapus"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-create" onclick="addBulkToWhitelist()">➕ Add Bulk Whitelist</button>
+                        <button class="btn btn-delete" onclick="clearBulkInput()">🗑️ Clear Input</button>
+                        <button class="btn btn-check" onclick="validateBulkInput()">🔍 Validate Input</button>
+                        <button class="btn btn-bulk" onclick="toggleBulkMode()">👤 Single Mode</button>
+                    </div>
+                </div>
+
+                <div id="whitelistResult"></div>
+            </div>
+
+            <!-- Keys Management Section -->
+            <div class="section">
+                <h2>🔑 Daftar Keys</h2>
+                <div class="button-group">
+                    <button class="btn btn-refresh" onclick="loadKeys()">🔄 Refresh</button>
+                </div>
+                <div id="keysTable"></div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Memproses...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tampilkan loading
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Tampilkan hasil
+        function showResult(elementId, message, type = 'info') {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        // Cek status admin
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/admin/status');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/admin/login';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.log('Admin auth check failed:', error);
+                window.location.href = '/admin/login';
+                return false;
+            }
+        }
+
+        // Logout admin
+        async function logout() {
+            try {
+                const response = await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/admin/login';
+                } else {
+                    showResult('createResellerResult', '❌ Gagal logout: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showResult('createResellerResult', '❌ Terjadi kesalahan saat logout: ' + error.message, 'error');
+            }
+        }
+
+        // Buat reseller key
+        async function createResellerKey() {
+            const username = document.getElementById('resellerUsername').value.trim();
+            const limit = parseInt(document.getElementById('resellerLimit').value);
+            
+            if (!username) {
+                showResult('createResellerResult', '❌ Mohon masukkan username reseller!', 'error');
+                return;
+            }
+
+            if (limit < 1 || limit > 1000) {
+                showResult('createResellerResult', '❌ Limit harus antara 1-1000!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/admin/create-reseller-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, limit })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('createResellerResult', 
+                        `✅ Reseller key berhasil dibuat!<br>
+                        <strong>Key:</strong> <span class="key-display">${data.data.key}</span><br>
+                        <strong>Username:</strong> ${data.data.username}<br>
+                        <strong>Limit:</strong> ${data.data.limit}`, 'success');
+                    
+                    document.getElementById('resellerUsername').value = '';
+                    document.getElementById('resellerLimit').value = '25';
+                    
+                    // Refresh keys table
+                    await loadKeys();
+                } else {
+                    showResult('createResellerResult', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('createResellerResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Buat upgrade key
+        async function createUpgradeKey() {
+            const resellerKey = document.getElementById('upgradeResellerKey').value.trim();
+            
+            if (!resellerKey) {
+                showResult('createUpgradeResult', '❌ Mohon masukkan reseller key!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/admin/create-upgrade-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ resellerKey })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('createUpgradeResult', 
+                        `✅ Upgrade key berhasil dibuat!<br>
+                        <strong>Upgrade Key:</strong> <span class="key-display">${data.data.upgradeKey}</span><br>
+                        <strong>Untuk Reseller:</strong> ${data.data.resellerUsername}<br>
+                        <strong>Limit Saat Ini:</strong> ${data.data.currentLimit}<br>
+                        <strong>Limit Baru:</strong> ${data.data.currentLimit + 25}`, 'success');
+                    
+                    document.getElementById('upgradeResellerKey').value = '';
+                } else {
+                    showResult('createUpgradeResult', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('createUpgradeResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Load keys
+        async function loadKeys() {
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/admin/keys');
+                const data = await response.json();
+
+                showLoading(false);
+
+                if (data.success) {
+                    displayKeys(data.data);
+                } else {
+                    showResult('keysTable', '❌ Gagal memuat keys: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('keysTable', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Display keys in table
+        function displayKeys(keys) {
+            const keysTable = document.getElementById('keysTable');
+            
+            if (keys.length === 0) {
+                keysTable.innerHTML = '<div class="result info">Belum ada keys yang dibuat</div>';
+                return;
+            }
+
+            let tableHTML = `
+                <table class="keys-table">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Username</th>
+                            <th>Type</th>
+                            <th>Limit</th>
+                            <th>Status</th>
+                            <th>Dibuat</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            keys.forEach(key => {
+                const isActive = key.isActive;
+                const statusClass = isActive ? 'status-active' : 'status-inactive';
+                const statusText = isActive ? 'Active' : 'Inactive';
+                const typeClass = key.type === 'reseller' ? 'status-active' : 'status-inactive';
+                const typeText = key.type === 'reseller' ? 'Reseller' : 'User';
+                
+                tableHTML += `
+                    <tr>
+                        <td><span class="key-display">${key.key}</span></td>
+                        <td>${key.username}</td>
+                        <td><span class="status-badge ${typeClass}">${typeText}</span></td>
+                        <td>${key.limit}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${new Date(key.createdAt).toLocaleString()}</td>
+                        <td>
+                            <button class="action-btn btn-copy" onclick="copyKey('${key.key}')">📋 Copy</button>
+                            <button class="action-btn btn-delete-small" onclick="deleteKey('${key.key}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            keysTable.innerHTML = tableHTML;
+        }
+
+        // Copy key to clipboard
+        function copyKey(key) {
+            navigator.clipboard.writeText(key).then(() => {
+                showResult('keysTable', '✅ Key berhasil disalin ke clipboard!', 'success');
+            }).catch(() => {
+                showResult('keysTable', '❌ Gagal menyalin key!', 'error');
+            });
+        }
+
+        // Delete key
+        async function deleteKey(key) {
+            if (!confirm(`Yakin ingin menghapus key "${key}"?`)) {
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`/api/admin/delete-key/${key}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('keysTable', '✅ Key berhasil dihapus!', 'success');
+                    await loadKeys();
+                } else {
+                    showResult('keysTable', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('keysTable', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Whitelist management functions
+        async function addToWhitelist() {
+            const username = document.getElementById('whitelistUsername').value.trim();
+            
+            if (!username) {
+                showResult('whitelistResult', '❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/whitelist/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('whitelistResult', '✅ User berhasil ditambahkan ke whitelist!', 'success');
+                    document.getElementById('whitelistUsername').value = '';
+                } else {
+                    showResult('whitelistResult', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('whitelistResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteFromWhitelist() {
+            const username = document.getElementById('whitelistUsername').value.trim();
+            
+            if (!username) {
+                showResult('whitelistResult', '❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/whitelist/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('whitelistResult', '✅ User berhasil dihapus dari whitelist!', 'success');
+                    document.getElementById('whitelistUsername').value = '';
+                } else {
+                    showResult('whitelistResult', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('whitelistResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        async function checkWhitelist() {
+            const username = document.getElementById('whitelistUsername').value.trim();
+            
+            if (!username) {
+                showResult('whitelistResult', '❌ Mohon masukkan username!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch(`/api/whitelist/check?username=${encodeURIComponent(username)}`);
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    if (data.found) {
+                        showResult('whitelistResult', `✅ Username "${username}" ADA di whitelist!`, 'success');
+                    } else {
+                        showResult('whitelistResult', `❌ Username "${username}" TIDAK ADA di whitelist!`, 'error');
+                    }
+                } else {
+                    showResult('whitelistResult', '❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('whitelistResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        async function getRawLink() {
+            showLoading(true);
+
+            try {
+                const response = await fetch('/raw');
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.whitelist) {
+                    const jsonString = JSON.stringify(data, null, 2);
+                    const baseUrl = window.location.origin;
+                    const rawUrl = `${baseUrl}/raw`;
+                    
+                    const resultDiv = document.getElementById('whitelistResult');
+                    resultDiv.innerHTML = `
+                        <div class="result success">✅ Raw Link Whitelist (${data.whitelist.length} users):</div>
+                        <div class="raw-output">${jsonString}</div>
+                        <div style="margin-top: 15px;">
+                            <div class="result info">🔗 Raw JSON URL (bisa dibuka di browser):</div>
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-family: monospace; word-break: break-all;">
+                                <a href="${rawUrl}" target="_blank" style="color: #007bff; text-decoration: none;">${rawUrl}</a>
+                            </div>
+                            <button class="btn btn-create" onclick="copyToClipboard()" style="margin-right: 10px;">📋 Copy JSON</button>
+                            <button class="btn btn-check" onclick="copyRawUrl()">🔗 Copy Raw URL</button>
+                        </div>
+                    `;
+                } else {
+                    showResult('whitelistResult', '❌ Gagal mengambil data whitelist!', 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('whitelistResult', '❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        function copyToClipboard() {
+            const rawOutput = document.querySelector('.raw-output');
+            const text = rawOutput.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showResult('whitelistResult', '✅ JSON berhasil disalin ke clipboard!', 'success');
+            }).catch(() => {
+                showResult('whitelistResult', '❌ Gagal menyalin ke clipboard!', 'error');
+            });
+        }
+
+        function copyRawUrl() {
+            const baseUrl = window.location.origin;
+            const rawUrl = `${baseUrl}/raw`;
+            
+            navigator.clipboard.writeText(rawUrl).then(() => {
+                showResult('whitelistResult', '✅ Raw URL berhasil disalin ke clipboard!', 'success');
+            }).catch(() => {
+                showResult('whitelistResult', '❌ Gagal menyalin URL ke clipboard!', 'error');
+            });
+        }
+
+        // Bulk operations
+        function toggleBulkMode() {
+            const singleSection = document.getElementById('singleUserSection');
+            const bulkSection = document.getElementById('bulkUserSection');
+            
+            if (singleSection.style.display === 'none') {
+                singleSection.style.display = 'block';
+                bulkSection.style.display = 'none';
+            } else {
+                singleSection.style.display = 'none';
+                bulkSection.style.display = 'block';
+            }
+        }
+
+        function clearBulkInput() {
+            document.getElementById('bulkUsernames').value = '';
+            showResult('whitelistResult', '✅ Input berhasil dibersihkan!', 'success');
+        }
+
+        function validateBulkInput() {
+            const input = document.getElementById('bulkUsernames').value.trim();
+            
+            if (!input) {
+                showResult('whitelistResult', '❌ Input kosong!', 'error');
+                return;
+            }
+
+            const usernames = input.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .map(username => username.replace(/@/g, '').trim())
+                .filter(username => username.length > 0);
+
+            if (usernames.length === 0) {
+                showResult('whitelistResult', '❌ Tidak ada username yang valid!', 'error');
+                return;
+            }
+
+            const uniqueUsernames = [...new Set(usernames)];
+            const duplicates = usernames.length - uniqueUsernames.length;
+
+            let message = `✅ Validasi berhasil!<br>`;
+            message += `📊 Total usernames: ${usernames.length}<br>`;
+            message += `🔢 Usernames unik: ${uniqueUsernames.length}<br>`;
+            if (duplicates > 0) {
+                message += `⚠️ Duplikasi: ${duplicates}<br>`;
+            }
+            message += `<br>📝 Usernames yang akan ditambahkan:<br>`;
+            message += `<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; max-height: 200px; overflow-y: auto;">`;
+            uniqueUsernames.forEach((username, index) => {
+                message += `${index + 1}. ${username}<br>`;
+            });
+            message += `</div>`;
+
+            showResult('whitelistResult', message, 'success');
+        }
+
+        async function addBulkToWhitelist() {
+            const input = document.getElementById('bulkUsernames').value.trim();
+            
+            if (!input) {
+                showResult('whitelistResult', '❌ Input kosong!', 'error');
+                return;
+            }
+
+            const usernames = input.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .map(username => username.replace(/@/g, '').trim())
+                .filter(username => username.length > 0);
+
+            if (usernames.length === 0) {
+                showResult('whitelistResult', '❌ Tidak ada username yang valid!', 'error');
+                return;
+            }
+
+            const uniqueUsernames = [...new Set(usernames)];
+
+            if (!confirm(`Yakin ingin menambahkan ${uniqueUsernames.length} usernames ke whitelist?`)) {
+                return;
+            }
+
+            showLoading(true);
+
+            let successCount = 0;
+            let errorCount = 0;
+            let errors = [];
+
+            for (const username of uniqueUsernames) {
+                try {
+                    const response = await fetch('/api/whitelist/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                        errors.push(`${username}: ${data.message}`);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`${username}: ${error.message}`);
+                }
+            }
+
+            showLoading(false);
+
+            let message = `✅ Bulk add selesai!<br>`;
+            message += `✅ Berhasil: ${successCount}<br>`;
+            message += `❌ Gagal: ${errorCount}<br>`;
+
+            if (errors.length > 0) {
+                message += `<br>❌ Error details:<br>`;
+                message += `<div style="background: #f8d7da; padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; max-height: 200px; overflow-y: auto;">`;
+                errors.forEach(error => {
+                    message += `• ${error}<br>`;
+                });
+                message += `</div>`;
+            }
+
+            if (successCount > 0) {
+                message += `<br><button class="btn btn-create" onclick="clearBulkInput()" style="margin-top: 10px;">🗑️ Clear Input</button>`;
+            }
+
+            showResult('whitelistResult', message, successCount > 0 ? 'success' : 'error');
+        }
+
+        // Inisialisasi
+        async function initAdmin() {
+            const isAuthenticated = await checkAdminStatus();
+            if (isAuthenticated) {
+                await loadKeys();
+            }
+        }
+
+        // Enter key support
+        document.getElementById('resellerUsername').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createResellerKey();
+            }
+        });
+
+        document.getElementById('upgradeResellerKey').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createUpgradeKey();
+            }
+        });
+
+        document.getElementById('whitelistUsername').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addToWhitelist();
+            }
+        });
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', initAdmin);
+    </script>
+</body>
+</html>

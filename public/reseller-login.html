@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reseller Login - Whitelist Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            font-size: 0.9em;
+        }
+
+        .info-box h4 {
+            margin-bottom: 8px;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 Reseller Login</h1>
+            <p>Masukkan key reseller Anda</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h4>ℹ️ Informasi Login</h4>
+                <p>• Satu key hanya bisa digunakan di satu device</p>
+                <p>• Jika key sudah digunakan di device lain, tunggu 30 menit</p>
+                <p>• Key akan otomatis logout setelah 30 menit tidak aktif</p>
+            </div>
+
+            <div class="form-group">
+                <label for="resellerKey">Reseller Key:</label>
+                <input type="text" id="resellerKey" placeholder="Masukkan key reseller Anda">
+            </div>
+
+            <button class="btn btn-login" onclick="loginReseller()">🚀 Login Reseller</button>
+            <button class="btn btn-back" onclick="goBack()">⬅️ Kembali</button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Memproses login...</p>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tampilkan loading
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Tampilkan hasil
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        // Login reseller
+        async function loginReseller() {
+            const resellerKey = document.getElementById('resellerKey').value.trim();
+            
+            if (!resellerKey) {
+                showResult('❌ Mohon masukkan key reseller!', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/api/reseller/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ key: resellerKey })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    showResult('✅ Login berhasil! Mengalihkan ke dashboard reseller...', 'success');
+                    
+                    // Simpan key di sessionStorage untuk digunakan di dashboard
+                    sessionStorage.setItem('resellerKey', resellerKey);
+                    sessionStorage.setItem('resellerData', JSON.stringify(data.data));
+                    
+                    // Redirect ke dashboard reseller setelah 2 detik
+                    setTimeout(() => {
+                        window.location.href = '/reseller-dashboard';
+                    }, 2000);
+                } else {
+                    showResult('❌ ' + data.message, 'error');
+                }
+            } catch (error) {
+                showLoading(false);
+                showResult('❌ Terjadi kesalahan: ' + error.message, 'error');
+            }
+        }
+
+        // Kembali ke halaman utama
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // Enter key support
+        document.getElementById('resellerKey').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginReseller();
+            }
+        });
+
+        // Cek apakah sudah login
+        window.addEventListener('load', function() {
+            const resellerKey = sessionStorage.getItem('resellerKey');
+            if (resellerKey) {
+                // Jika sudah login, redirect ke dashboard
+                window.location.href = '/reseller-dashboard';
+            }
+        });
+    </script>
+</body>
+</html>
