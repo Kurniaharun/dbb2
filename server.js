@@ -1630,8 +1630,60 @@ app.get('/api/whitelist/check', requireKeyAuth, async (req, res) => {
     }
 });
 
-// Raw endpoint untuk menampilkan username dalam format JSON (dilindungi dengan user key)
-app.get('/raw', requireKeyAuth, async (req, res) => {
+// Raw endpoint untuk menampilkan username dalam format JSON (PUBLIC ACCESS - tidak memerlukan API key)
+app.get('/raw', async (req, res) => {
+    try {
+        // Import Supabase client
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Ambil semua username dari database
+        const { data, error } = await supabase
+            .from('whitelist')
+            .select('username')
+            .order('username');
+        
+        if (error) {
+            return res.status(500).json({
+                error: error.message
+            });
+        }
+        
+        // Format username dalam JSON sesuai format yang diminta
+        const usernames = data.map(item => item.username);
+        const jsonResponse = {
+            "whitelisted_users": usernames,
+            "info": {
+                "last_updated": new Date().toISOString().split('T')[0], // Format YYYY-MM-DD
+                "total_users": usernames.length,
+                "contact": "085351187520",
+                "price_extend": "25k"
+            },
+            "kick_message": {
+                "title": "KAMU TIDAK TERWHITELIST DI DB",
+                "main_text": "Garansi Habis atau Belum Beli Script",
+                "price_info": "Harga Extend: 25k",
+                "contact": "WA: 085351187520",
+                "show_username": true
+            }
+        };
+        
+        // Set header untuk JSON
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        
+        // Kirim response dengan pretty print
+        res.send(JSON.stringify(jsonResponse, null, 2));
+        
+    } catch (error) {
+        res.status(500).json({
+            error: error.message
+        });
+    }
+});
+
+// Raw endpoint dengan API key (untuk user yang memerlukan autentikasi)
+app.get('/raw/secure', requireKeyAuth, async (req, res) => {
     try {
         // Import Supabase client
         const { createClient } = require('@supabase/supabase-js');
@@ -1779,7 +1831,8 @@ app.listen(PORT, () => {
     console.log(`👑 Admin Panel: http://localhost:${PORT}/admin`);
     console.log(`👤 User Login: http://localhost:${PORT}/login`);
     console.log(`🏪 Reseller Login: http://localhost:${PORT}/reseller-login`);
-    console.log(`🔗 Raw Link (User): http://localhost:${PORT}/raw (requires API key)`);
+    console.log(`🔗 Raw Link (Public): http://localhost:${PORT}/raw (no API key required)`);
+    console.log(`🔗 Raw Link (Secure): http://localhost:${PORT}/raw/secure (requires API key)`);
     console.log(`🔗 Raw Link (Admin): http://localhost:${PORT}/admin/raw (requires admin login)`);
     
     // Cek environment variables
